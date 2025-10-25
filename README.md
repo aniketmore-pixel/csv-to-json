@@ -4,6 +4,11 @@ A Node.js API to parse a CSV file and upload its contents to a PostgreSQL databa
 
 ---
 
+## Demo Video
+Watch this demo video -> https://drive.google.com/file/d/1cbTDl2mmla5pzMX-blX1zd8um91wM3m8/view?usp=sharing
+
+---
+
 ## Features
 
 - Parses CSV files with nested headers like `name.firstName`, `address.city`.
