@@ -1,4 +1,4 @@
-# CSV to PostgreSQL Uploader
+# CSV to JSON API
 
 A Node.js API to parse a CSV file and upload its contents to a PostgreSQL database. Supports batch insertion and handles nested CSV headers and JSON fields.
 
