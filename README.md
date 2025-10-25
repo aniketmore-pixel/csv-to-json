@@ -26,8 +26,8 @@ A Node.js API to parse a CSV file and upload its contents to a PostgreSQL databa
 
 1. **Clone the repository**  
    ```bash
-   git clone <repo-url>
-   cd csv-to-json-uploader
+   git clone https://github.com/aniketmore-pixel/csv-to-json
+   cd csv-to-json
    ```
 
 2. **Install dependencies**  

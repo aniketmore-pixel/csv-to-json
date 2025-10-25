@@ -38,10 +38,7 @@ app.post("/upload-csv", async (req, res) => {
 
   try {
     const stream = createReadStream(CSV_PATH, { encoding: "utf8" });
-
-    stream.on("error", (err) => {
-      console.error("Failed to read CSV file:", err.message);
-    });
+    stream.on("error", (err) => console.error("Failed to read CSV file:", err.message));
 
     const parser = parseCSVStream(stream);
 
@@ -88,6 +85,11 @@ app.post("/upload-csv", async (req, res) => {
     }
 
     console.log(`Successfully processed ${total} records.`);
+
+    // --- Compute & print age distribution ---
+    const dist = await computeAgeDistribution(client);
+    printAgeDistribution(dist);
+
     res.json({ message: `Successfully inserted ${total} records.` });
   } catch (err) {
     console.error("CSV processing failed:", err.message);
@@ -110,7 +112,46 @@ function extractAdditionalInfo(record) {
   return Object.keys(clone).length ? clone : null;
 }
 
+// Compute age distribution from DB
+async function computeAgeDistribution(client) {
+  try {
+    const res = await client.query("SELECT age FROM public.users WHERE age IS NOT NULL");
+    const ages = res.rows.map(r => Number(r.age)).filter(a => !isNaN(a));
+    const total = ages.length;
+
+    const buckets = { lt20: 0, between20and40: 0, between40and60: 0, gt60: 0 };
+    for (const a of ages) {
+      if (a < 20) buckets.lt20++;
+      else if (a >= 20 && a < 40) buckets.between20and40++;
+      else if (a >= 40 && a < 60) buckets.between40and60++;
+      else buckets.gt60++;
+    }
+
+    const pct = total === 0
+      ? { lt20: 0, between20and40: 0, between40and60: 0, gt60: 0 }
+      : {
+          lt20: Math.round((buckets.lt20 / total) * 100),
+          between20and40: Math.round((buckets.between20and40 / total) * 100),
+          between40and60: Math.round((buckets.between40and60 / total) * 100),
+          gt60: Math.round((buckets.gt60 / total) * 100),
+        };
+
+    return { total, counts: buckets, percentages: pct };
+  } catch (err) {
+    console.error("Failed to compute age distribution:", err.message);
+    return { total: 0, counts: {}, percentages: {} };
+  }
+}
+
+// Print age distribution report
+function printAgeDistribution(dist) {
+  console.log("\nAge-Group % Distribution (calculated from DB):\n");
+  console.log(`< 20\t\t${dist.percentages.lt20}%`);
+  console.log(`20 to 40\t${dist.percentages.between20and40}%`);
+  console.log(`40 to 60\t${dist.percentages.between40and60}%`);
+  console.log(`> 60\t\t${dist.percentages.gt60}%`);
+  console.log(`\nTotal users counted: ${dist.total}\n`);
+}
+
 // Start Express server
-app.listen(port, () => {
-  console.log(`Server started on http://localhost:${port}`);
-});
+app.listen(port, () => console.log(`Server started on http://localhost:${port}`));
